@@ -11,6 +11,7 @@
     "@anthropic-ai/sdk": "^0.60.0",
     "@google/generative-ai": "^0.21.0",
     "@huggingface/inference": "^4.7.1",
+    "groq-sdk": "^1.6.0",
     "react": "19.0.0-rc-8b08e99e-20240713",
     "react-dom": "19.0.0-rc-8b08e99e-20240713",
     "react-markdown": "^9.0.1",

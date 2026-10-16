@@ -38,7 +38,7 @@ Under the note, **Model** offers **Gemini** and **Groq**. Gemini starts pressed.
 
 ## The recipe
 
-Gemini calls `gemini-2.5-flash`. Groq calls `https://api.groq.com/openai/v1/chat/completions` with the model in `VITE_LLM`.
+Gemini calls `gemini-2.5-flash`. Groq uses `groq-sdk` and `groq.chat.completions.create` with the model in `VITE_LLM`.
 
 This run set Comfort, Mexican, the note `keep it mild, serve 4`, and Groq. The reply is **Mild Chicken Tinga Skillet**. The line under the toolbar is `Built from Chicken, Oregano, Tomatoes, Garlic · Groq · Mexican · “keep it mild, serve 4”`. The opening sentence is "A quick, warm Mexican-style dish that makes the most of your chicken, oregano, tomatoes and garlic while staying gentle on the palate." It lists **Time:** 30 minutes and **Serves:** 4, then Ingredients, Method, and a Chef's note. The toolbar says ON THE PLATE, **Copy recipe**, and **Start over**. The recipe is written under the dish form.
 
@@ -46,4 +46,4 @@ This run set Comfort, Mexican, the note `keep it mild, serve 4`, and Groq. The r
 
 The footer says "Recipes are drafted by Gemini or Groq from whatever is already in the kitchen." and links **Mamadou Moussa Balde** to the same LinkedIn profile. This run showed © 2026.
 
-`@google/generative-ai` is the Gemini client. Groq is a `fetch` to the chat completions endpoint. `@anthropic-ai/sdk` and `@huggingface/inference` are installed, and this page does not call them.
+`@google/generative-ai` is the Gemini client. `groq-sdk` is the Groq client. `@anthropic-ai/sdk` and `@huggingface/inference` are installed, and this page does not call them.

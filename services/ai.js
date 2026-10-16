@@ -1,4 +1,5 @@
 import { GoogleGenerativeAI } from "@google/generative-ai"
+import Groq from "groq-sdk"
 
 const SYSTEM_PROMPT = `
 You are a confident home-kitchen chef. A cook will give you ingredients they already have.
@@ -29,7 +30,6 @@ const MOODS = {
     showstopper: "Make it feel special enough for guests, without rare ingredients.",
 }
 
-const GROQ_BASE = "https://api.groq.com/openai/v1"
 const GEMINI_MODEL = "gemini-2.5-flash"
 
 const geminiKey = import.meta.env.VITE_GEMINI_API_KEY
@@ -37,6 +37,10 @@ const groqKey = import.meta.env.VITE_GROQ_API_KEY
 const groqModel = import.meta.env.VITE_LLM
 
 const genAI = new GoogleGenerativeAI(geminiKey || "")
+const groq = new Groq({
+    apiKey: groqKey || "",
+    dangerouslyAllowBrowser: true,
+})
 
 function buildPrompt(ingredientsArr, options) {
     const mood = options.mood || "surprise"
@@ -81,28 +85,15 @@ async function getRecipeFromGroq(ingredientsArr, options) {
         throw new Error("Add VITE_LLM to your .env file, then restart the app.")
     }
 
-    const response = await fetch(`${GROQ_BASE}/chat/completions`, {
-        method: "POST",
-        headers: {
-            "Content-Type": "application/json",
-            Authorization: `Bearer ${groqKey}`,
-        },
-        body: JSON.stringify({
-            model: groqModel,
-            messages: [
-                { role: "system", content: SYSTEM_PROMPT },
-                { role: "user", content: buildPrompt(ingredientsArr, options) },
-            ],
-        }),
+    const completion = await groq.chat.completions.create({
+        model: groqModel,
+        messages: [
+            { role: "system", content: SYSTEM_PROMPT },
+            { role: "user", content: buildPrompt(ingredientsArr, options) },
+        ],
     })
 
-    const data = await response.json().catch(() => ({}))
-    if (!response.ok) {
-        const detail = data?.error?.message || `Groq returned ${response.status}.`
-        throw new Error(detail)
-    }
-
-    const text = data?.choices?.[0]?.message?.content?.trim()
+    const text = completion.choices?.[0]?.message?.content?.trim()
     if (!text) {
         throw new Error("The model returned an empty recipe.")
     }

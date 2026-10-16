@@ -54,7 +54,7 @@ sequenceDiagram
     Page->>Service: getRecipe(names, provider, mood, cuisine, note)
     Service->>Service: buildPrompt
     alt provider is groq
-      Service->>Model: POST /chat/completions
+      Service->>Model: groq.chat.completions.create
     else provider is gemini
       Service->>Model: generateContent
     end
@@ -78,7 +78,7 @@ flowchart TD
   choices --> write[Write the recipe]
   write --> which{Model}
   which -->|Gemini| gemini[gemini-2.5-flash]
-  which -->|Groq| groq["POST https://api.groq.com/openai/v1/chat/completions"]
+  which -->|Groq| groq["groq-sdk chat.completions.create"]
   gemini --> show[Render markdown]
   groq --> show
   show --> after{Copy or Start over}
@@ -125,7 +125,7 @@ An empty cuisine sends “Choose the cuisine that suits these ingredients.” A 
 | Control | Client | Request |
 | --- | --- | --- |
 | Gemini | `@google/generative-ai` | `gemini-2.5-flash`, with the system instruction and `generateContent` |
-| Groq | `fetch` | `POST https://api.groq.com/openai/v1/chat/completions`. The model id is `VITE_LLM`. |
+| Groq | `groq-sdk` | `groq.chat.completions.create`. The model id is `VITE_LLM`. The client sets `dangerouslyAllowBrowser` so the page can call Groq. |
 
 `@anthropic-ai/sdk` and `@huggingface/inference` are installed. This page does not import them.
 
