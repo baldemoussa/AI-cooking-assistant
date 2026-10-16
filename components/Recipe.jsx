@@ -1,6 +1,11 @@
 import { useEffect, useRef, useState } from "react"
 import RecipeCode from "./recipeCode.jsx"
-import { getRecipeFromGemini } from "../ai"
+import { getRecipe } from "../ai"
+
+const PROVIDERS = [
+    { id: "gemini", label: "Gemini" },
+    { id: "groq", label: "Groq" },
+]
 
 const MOODS = [
     { id: "surprise", label: "Chef’s choice" },
@@ -37,6 +42,7 @@ const COOKING_LINES = [
 export default function Recipe(props) {
     const [recipe, setRecipe] = useState("")
     const [basedOn, setBasedOn] = useState([])
+    const [provider, setProvider] = useState("gemini")
     const [mood, setMood] = useState("surprise")
     const [cuisine, setCuisine] = useState("")
     const [note, setNote] = useState("")
@@ -66,7 +72,7 @@ export default function Recipe(props) {
     function clearRecipe() {
         setRecipe("")
         setBasedOn([])
-        setRequest({ cuisine: "", note: "" })
+        setRequest({ cuisine: "", note: "", provider: "" })
         setError("")
     }
 
@@ -75,13 +81,14 @@ export default function Recipe(props) {
         setError("")
         try {
             const cookNote = note.trim()
-            const recipeMarkdown = await getRecipeFromGemini(props.ingredients, {
+            const recipeMarkdown = await getRecipe(props.ingredients, {
+                provider,
                 mood,
                 cuisine,
                 note: cookNote,
             })
             setBasedOn(props.ingredients)
-            setRequest({ cuisine, note: cookNote })
+            setRequest({ cuisine, note: cookNote, provider })
             setRecipe(recipeMarkdown)
         } catch (err) {
             setError(err.message || "The kitchen is quiet. Try the recipe again.")
@@ -101,7 +108,7 @@ export default function Recipe(props) {
             </div>
             <p className="recipe-lead">
                 {ready
-                    ? "The pantry can carry a full dish. Choose a mood and a cuisine, then I’ll write it."
+                    ? "The pantry can carry a full dish. Choose a model, a mood, and a cuisine, then I’ll write it."
                     : `Add ${remaining} more ${remaining === 1 ? "ingredient" : "ingredients"} to unlock a recipe.`}
             </p>
             <div className="moods" role="group" aria-label="Recipe mood">
@@ -142,6 +149,23 @@ export default function Recipe(props) {
                         disabled={isLoading}
                     />
                 </label>
+                <div className="recipe-field">
+                    <span>Model</span>
+                    <div className="moods" role="group" aria-label="Recipe model">
+                        {PROVIDERS.map((option) => (
+                            <button
+                                key={option.id}
+                                type="button"
+                                className={provider === option.id ? "mood is-active" : "mood"}
+                                onClick={() => setProvider(option.id)}
+                                disabled={isLoading}
+                                aria-pressed={provider === option.id}
+                            >
+                                {option.label}
+                            </button>
+                        ))}
+                    </div>
+                </div>
             </div>
             <button
                 type="button"

@@ -32,6 +32,7 @@ export default function RecipeCode(props) {
             {props.basedOn.length > 0 && (
                 <p className="based-on">
                     Built from {props.basedOn.join(", ")}
+                    {props.request?.provider === "groq" ? " · Groq" : props.request?.provider === "gemini" ? " · Gemini" : ""}
                     {props.request?.cuisine ? ` · ${props.request.cuisine}` : ""}
                     {props.request?.note ? ` · “${props.request.note}”` : ""}
                 </p>

@@ -30,7 +30,7 @@ export default function App() {
             <Header userName={userName} onUserNameChange={updateUserName} />
             <Main userName={userName} />
             <footer className="site-footer">
-                <p>Recipes are drafted by Gemini from whatever is already in the kitchen.</p>
+                <p>Recipes are drafted by Gemini or Groq from whatever is already in the kitchen.</p>
                 <p className="copyright">
                     © {new Date().getFullYear()}{" "}
                     <a href="https://www.linkedin.com/in/2mb" target="_blank" rel="noreferrer">

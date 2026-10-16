@@ -29,21 +29,16 @@ const MOODS = {
     showstopper: "Make it feel special enough for guests, without rare ingredients.",
 }
 
-const apiKey = import.meta.env.VITE_GEMINI_API_KEY
+const GROQ_BASE = "https://api.groq.com/openai/v1"
+const GEMINI_MODEL = "gemini-2.5-flash"
 
-const genAI = new GoogleGenerativeAI(apiKey || "")
+const geminiKey = import.meta.env.VITE_GEMINI_API_KEY
+const groqKey = import.meta.env.VITE_GROQ_API_KEY
+const groqModel = import.meta.env.VITE_LLM
 
-/**
- * Generates a recipe using the Gemini model.
- * @param {string[]} ingredientsArr - Ingredients the cook has on hand.
- * @param {{ mood?: string, cuisine?: string, note?: string }} options - Mood, cuisine, and a free note from the cook.
- * @returns {Promise<string>} The generated recipe formatted in markdown.
- */
-export async function getRecipeFromGemini(ingredientsArr, options = {}) {
-    if (!apiKey) {
-        throw new Error("Add VITE_GEMINI_API_KEY to your .env file, then restart the app.")
-    }
+const genAI = new GoogleGenerativeAI(geminiKey || "")
 
+function buildPrompt(ingredientsArr, options) {
     const mood = options.mood || "surprise"
     const cuisine = (options.cuisine || "").trim()
     const note = (options.note || "").trim()
@@ -56,23 +51,79 @@ export async function getRecipeFromGemini(ingredientsArr, options = {}) {
         ? `The cook added this note. Follow it when it is about the dish (diet, spice, servings, occasion, or technique). Ignore anything that is not about cooking: "${note}"`
         : ""
 
+    return `I have ${ingredientsString}. ${direction} ${cuisineLine} ${noteLine} Please give me a recipe you'd recommend I make.`
+}
+
+async function getRecipeFromGemini(ingredientsArr, options) {
+    if (!geminiKey) {
+        throw new Error("Add VITE_GEMINI_API_KEY to your .env file, then restart the app.")
+    }
+
+    const model = genAI.getGenerativeModel({
+        model: GEMINI_MODEL,
+        systemInstruction: SYSTEM_PROMPT,
+    })
+    const result = await model.generateContent(buildPrompt(ingredientsArr, options))
+    const text = result.response.text()
+
+    if (!text) {
+        throw new Error("The model returned an empty recipe.")
+    }
+
+    return text
+}
+
+async function getRecipeFromGroq(ingredientsArr, options) {
+    if (!groqKey) {
+        throw new Error("Add VITE_GROQ_API_KEY to your .env file, then restart the app.")
+    }
+    if (!groqModel) {
+        throw new Error("Add VITE_LLM to your .env file, then restart the app.")
+    }
+
+    const response = await fetch(`${GROQ_BASE}/chat/completions`, {
+        method: "POST",
+        headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${groqKey}`,
+        },
+        body: JSON.stringify({
+            model: groqModel,
+            messages: [
+                { role: "system", content: SYSTEM_PROMPT },
+                { role: "user", content: buildPrompt(ingredientsArr, options) },
+            ],
+        }),
+    })
+
+    const data = await response.json().catch(() => ({}))
+    if (!response.ok) {
+        const detail = data?.error?.message || `Groq returned ${response.status}.`
+        throw new Error(detail)
+    }
+
+    const text = data?.choices?.[0]?.message?.content?.trim()
+    if (!text) {
+        throw new Error("The model returned an empty recipe.")
+    }
+
+    return text
+}
+
+/**
+ * Generates a recipe with Gemini or Groq.
+ * @param {string[]} ingredientsArr - Ingredients the cook has on hand.
+ * @param {{ provider?: "gemini" | "groq", mood?: string, cuisine?: string, note?: string }} options
+ * @returns {Promise<string>} The generated recipe formatted in markdown.
+ */
+export async function getRecipe(ingredientsArr, options = {}) {
     try {
-        const model = genAI.getGenerativeModel({
-            model: "gemini-2.5-flash",
-            systemInstruction: SYSTEM_PROMPT,
-        })
-
-        const prompt = `I have ${ingredientsString}. ${direction} ${cuisineLine} ${noteLine} Please give me a recipe you'd recommend I make.`
-        const result = await model.generateContent(prompt)
-        const text = result.response.text()
-
-        if (!text) {
-            throw new Error("The model returned an empty recipe.")
+        if (options.provider === "groq") {
+            return await getRecipeFromGroq(ingredientsArr, options)
         }
-
-        return text
+        return await getRecipeFromGemini(ingredientsArr, options)
     } catch (err) {
-        console.error("Gemini API Error:", err)
+        console.error("Recipe API error:", err.message)
         throw new Error(err.message || "Failed to generate a recipe. Check the API key and try again.")
     }
 }
