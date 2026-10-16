@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from "react"
 import RecipeCode from "./recipeCode.jsx"
-import { getRecipe } from "../ai"
+import { getRecipe } from "../services/ai"
 
 const PROVIDERS = [
     { id: "gemini", label: "Gemini" },
