@@ -4,6 +4,12 @@
 
 A Vite React page that drafts a recipe from the ingredients already on the counter. From this folder, `npm start` and `npm run dev` both run Vite. This run was Vite 7.0.6 at http://localhost:5173/. The tab title is **AI cooking assistant**. The page reads `VITE_GEMINI_API_KEY`. `.env.example` shows that name and points to [Google AI Studio](https://aistudio.google.com/app/apikey) for a key.
 
+| | |
+| --- | --- |
+| Deployment | [https://ai-cooking-assistant-c393.onrender.com/](https://ai-cooking-assistant-c393.onrender.com/) |
+| Date | October 15, 2026 |
+| Release | `67ca9f9` on `main` |
+
 ## The page
 
 The eyebrow is "Pantry to plate". The heading is "AI cooking assistant" and the line under it is "Tell me what you have. I’ll write dinner." Headings use Fraunces. Body text uses Outfit. The heading is 43.2px, color `rgb(20, 52, 60)`. The page background is `rgb(243, 239, 232)`.
