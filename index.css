@@ -155,7 +155,7 @@ h2,
 
 .stage {
     display: grid;
-    grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+    grid-template-columns: minmax(0, 0.75fr) minmax(0, 1.35fr);
     gap: 22px;
     align-items: start;
 }
