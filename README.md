@@ -8,7 +8,7 @@ The tab title is **AI cooking assistant**. The eyebrow is "Pantry to plate". The
 
 The greeting follows the hour. This morning it read **Good morning**, then the name **Chef**, then **Change**. The name is stored under `chef-gemini-guest`. An empty name falls back to Chef, and the saved name is trimmed to 24 characters.
 
-The pantry starts with Chicken, Oregano, and Tomatoes. The heading was "3 ingredients on hand". Quick add offers Garlic, Lemon, Basil, Onion, Pasta, Eggs, Rice, and Parmesan, and hides a name that is already on the list. The add box placeholder is "e.g. pasta, tomato, cheese".
+The pantry starts with 1 lb Chicken, 1 tsp Oregano, and 2 Tomatoes. The heading was "3 ingredients on hand". The add form has a quantity box (placeholder "2 cups") and an ingredient box (placeholder "e.g. pasta, tomato, cheese"). A blank quantity is allowed. Quick add offers Garlic, Lemon, Basil, Onion, Pasta, Eggs, Rice, and Parmesan, each with a stored amount, and hides a name that is already on the list. Each row shows the quantity, then the name. Edit changes both.
 
 ![The starting page, with three ingredients and the dish form](docs/screenshots/pantry.png)
 
@@ -86,6 +86,8 @@ A Gemini reply of "This model is currently experiencing high demand" means the r
   * That release does not include the Gemini and Groq switch
 * Local working copy
   * Model buttons for Gemini and Groq, Groq calls through `groq-sdk`, and the wider dish column
+  * Each pantry item stores a quantity, and that amount is sent with the recipe request
+  * Save PDF downloads the generated dish as a letter-size PDF
 
 ## License
 

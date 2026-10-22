@@ -1,11 +1,14 @@
 import { useEffect, useState } from "react"
 import ReactMarkdown from "react-markdown"
+import { downloadRecipePdf } from "../services/recipePdf"
 
 export default function RecipeCode(props) {
     const [copied, setCopied] = useState(false)
+    const [pdfState, setPdfState] = useState("idle")
 
     useEffect(() => {
         setCopied(false)
+        setPdfState("idle")
     }, [props.recipe])
 
     async function copyRecipe() {
@@ -18,13 +21,29 @@ export default function RecipeCode(props) {
         }
     }
 
+    function savePdf() {
+        try {
+            downloadRecipePdf({
+                markdown: props.recipe,
+                basedOn: props.basedOn,
+                request: props.request,
+            })
+            setPdfState("saved")
+        } catch {
+            setPdfState("error")
+        }
+    }
+
     return (
         <article className="suggested-recipe-container" aria-live="polite" ref={props.recipeRef}>
             <div className="recipe-toolbar">
                 <p>On the plate</p>
-                <div>
+                <div className="recipe-actions">
                     <button type="button" onClick={copyRecipe}>
                         {copied ? "Copied" : "Copy recipe"}
+                    </button>
+                    <button type="button" onClick={savePdf}>
+                        {pdfState === "saved" ? "Saved" : pdfState === "error" ? "Try PDF again" : "Save PDF"}
                     </button>
                     <button type="button" onClick={props.clearRecipe}>Start over</button>
                 </div>

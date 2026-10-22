@@ -174,7 +174,8 @@ h2,
 }
 
 .ingredient-form {
-    display: flex;
+    display: grid;
+    grid-template-columns: 6rem minmax(0, 1fr);
     gap: 10px;
 }
 
@@ -188,9 +189,13 @@ h2,
     color: var(--ink);
 }
 
+.ingredient-form input[name="ingredient"] {
+    min-width: 0;
+}
+
 .ingredient-form button {
-    flex: 0 0 auto;
-    padding: 0 18px;
+    grid-column: 1 / -1;
+    padding: 14px 18px;
 }
 
 .ingredient-form button:hover,
@@ -278,15 +283,37 @@ h2,
     font-weight: 600;
 }
 
+.ingredient-qty {
+    flex: 0 0 auto;
+    color: var(--accent);
+    font-size: 0.85rem;
+    font-weight: 600;
+}
+
 .ingredient-name {
     flex: 1;
+    min-width: 0;
     font-weight: 500;
 }
 
+.quantity-input {
+    width: 100%;
+    min-width: 0;
+    padding: 8px 12px;
+}
+
 .edit-container {
-    display: flex;
+    display: grid;
     flex: 1;
+    min-width: 0;
+    grid-template-columns: 6rem minmax(0, 1fr);
     align-items: center;
+    gap: 8px;
+}
+
+.edit-actions {
+    grid-column: 1 / -1;
+    display: flex;
     gap: 8px;
 }
 
@@ -489,6 +516,13 @@ h2,
     text-transform: uppercase;
 }
 
+.recipe-actions {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+    gap: 8px;
+}
+
 .recipe-toolbar button {
     background: var(--cream-deep);
     color: var(--ink);
@@ -598,6 +632,17 @@ h2,
     .write-recipe {
         width: 100%;
         padding: 14px 18px;
+    }
+
+    .ingredient-form,
+    .edit-container {
+        grid-template-columns: 1fr;
+    }
+
+    .ingredient-form input[name="quantity"],
+    .quantity-input {
+        width: 100%;
+        flex: none;
     }
 
     .ingredient-row {

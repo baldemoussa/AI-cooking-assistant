@@ -2,14 +2,28 @@ import { useEffect, useRef, useState } from "react"
 import Recipe from "./components/Recipe"
 import IngredientsList from "./components/IngredientsList"
 
-const SUGGESTIONS = ["Garlic", "Lemon", "Basil", "Onion", "Pasta", "Eggs", "Rice", "Parmesan"]
+const SUGGESTIONS = [
+    { name: "Garlic", quantity: "3 cloves" },
+    { name: "Lemon", quantity: "1" },
+    { name: "Basil", quantity: "1/4 cup" },
+    { name: "Onion", quantity: "1" },
+    { name: "Pasta", quantity: "8 oz" },
+    { name: "Eggs", quantity: "2" },
+    { name: "Rice", quantity: "1 cup" },
+    { name: "Parmesan", quantity: "1/2 cup" },
+]
 const PANTRY_LIMIT = 12
 
 const starterPantry = () => [
-    { id: crypto.randomUUID(), name: "Chicken" },
-    { id: crypto.randomUUID(), name: "Oregano" },
-    { id: crypto.randomUUID(), name: "Tomatoes" },
+    { id: crypto.randomUUID(), name: "Chicken", quantity: "1 lb" },
+    { id: crypto.randomUUID(), name: "Oregano", quantity: "1 tsp" },
+    { id: crypto.randomUUID(), name: "Tomatoes", quantity: "2" },
 ]
+
+function describeIngredient(ingredient) {
+    const quantity = (ingredient.quantity || "").trim()
+    return quantity ? `${quantity} ${ingredient.name}` : ingredient.name
+}
 
 export default function Main() {
     const [ingredients, setIngredients] = useState(starterPantry)
@@ -37,8 +51,9 @@ export default function Main() {
         setNotice({ text, tone, id: Date.now() })
     }
 
-    function addIngredient(name) {
+    function addIngredient(name, quantity = "") {
         const ingredientName = name.trim()
+        const ingredientQuantity = quantity.trim()
 
         if (ingredientName === "") {
             notify("Type an ingredient first.", "warn")
@@ -61,17 +76,21 @@ export default function Main() {
 
         setIngredients((current) => [
             ...current,
-            { id: crypto.randomUUID(), name: ingredientName },
+            { id: crypto.randomUUID(), name: ingredientName, quantity: ingredientQuantity },
         ])
-        notify(`${ingredientName} added.`)
+        notify(`${describeIngredient({ name: ingredientName, quantity: ingredientQuantity })} added.`)
         return true
     }
 
     function handleSubmit(event) {
         event.preventDefault()
-        const input = event.target.elements.ingredient
-        if (addIngredient(input.value)) {
-            input.value = ""
+        const form = event.target
+        const nameInput = form.elements.ingredient
+        const quantityInput = form.elements.quantity
+        if (addIngredient(nameInput.value, quantityInput.value)) {
+            nameInput.value = ""
+            quantityInput.value = ""
+            quantityInput.focus()
         }
     }
 
@@ -98,8 +117,9 @@ export default function Main() {
         notify("Pantry cleared.")
     }
 
-    function handleEdit(id, newName) {
+    function handleEdit(id, newName, newQuantity = "") {
         const trimmedName = newName.trim()
+        const trimmedQuantity = newQuantity.trim()
         if (trimmedName === "") {
             notify("An ingredient needs a name.", "warn")
             return
@@ -115,7 +135,9 @@ export default function Main() {
         }
 
         setIngredients((current) => current.map((ingredient) => (
-            ingredient.id === id ? { ...ingredient, name: trimmedName } : ingredient
+            ingredient.id === id
+                ? { ...ingredient, name: trimmedName, quantity: trimmedQuantity }
+                : ingredient
         )))
         notify("Ingredient updated.")
     }
@@ -127,7 +149,7 @@ export default function Main() {
             : `${ingredients.length} ingredients on hand`
 
     const suggestions = SUGGESTIONS.filter((suggestion) => (
-        !ingredients.some((ingredient) => ingredient.name.toLowerCase() === suggestion.toLowerCase())
+        !ingredients.some((ingredient) => ingredient.name.toLowerCase() === suggestion.name.toLowerCase())
     ))
 
     return (
@@ -136,6 +158,13 @@ export default function Main() {
                 <p className="eyebrow">The pantry</p>
                 <h2 id="pantry-title">{title}</h2>
                 <form className="ingredient-form" onSubmit={handleSubmit}>
+                    <input
+                        name="quantity"
+                        type="text"
+                        aria-label="Quantity"
+                        placeholder="2 cups"
+                        maxLength={24}
+                    />
                     <input
                         name="ingredient"
                         type="text"
@@ -150,11 +179,12 @@ export default function Main() {
                         <span>Quick add</span>
                         {suggestions.map((suggestion) => (
                             <button
-                                key={suggestion}
+                                key={suggestion.name}
                                 type="button"
-                                onClick={() => addIngredient(suggestion)}
+                                onClick={() => addIngredient(suggestion.name, suggestion.quantity)}
+                                aria-label={`Add ${describeIngredient(suggestion)}`}
                             >
-                                {suggestion}
+                                {suggestion.name}
                             </button>
                         ))}
                     </div>
@@ -183,7 +213,7 @@ export default function Main() {
                     </button>
                 )}
             </section>
-            <Recipe ingredients={ingredients.map((ingredient) => ingredient.name)} />
+            <Recipe ingredients={ingredients.map(describeIngredient)} />
         </main>
     )
 }

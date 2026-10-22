@@ -3,6 +3,8 @@ import Groq from "groq-sdk"
 
 const SYSTEM_PROMPT = `
 You are a confident home-kitchen chef. A cook will give you ingredients they already have.
+Some ingredients include a quantity. Treat that amount as what is on hand and scale the dish to it.
+If an ingredient has no quantity, choose a sensible home-kitchen amount.
 Suggest one recipe they could make with some or all of those ingredients.
 You do not need to use every ingredient. You may add a few common extras, but keep the shopping list short.
 Write in a warm, specific voice. No preamble, no sign-off, no mention of being an AI.
@@ -103,7 +105,7 @@ async function getRecipeFromGroq(ingredientsArr, options) {
 
 /**
  * Generates a recipe with Gemini or Groq.
- * @param {string[]} ingredientsArr - Ingredients the cook has on hand.
+ * @param {string[]} ingredientsArr - Ingredients the cook has on hand, each as "quantity name" or a name alone.
  * @param {{ provider?: "gemini" | "groq", mood?: string, cuisine?: string, note?: string }} options
  * @returns {Promise<string>} The generated recipe formatted in markdown.
  */

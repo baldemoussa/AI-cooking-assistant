@@ -32,10 +32,10 @@ flowchart LR
 
 | Use case | What the page does |
 | --- | --- |
-| Manage the pantry | Starts with Chicken, Oregano, and Tomatoes. Add, edit, remove, or clear. Twelve ingredients is the limit. A recipe needs at least three. |
+| Manage the pantry | Starts with 1 lb Chicken, 1 tsp Oregano, and 2 Tomatoes. Each item has a name and an optional quantity. Add, edit, remove, or clear. Twelve ingredients is the limit. A recipe needs at least three. |
 | Set the dish | Mood, cuisine, a note of up to 280 characters, and Gemini or Groq. Gemini starts selected. |
 | Generate a recipe | `components/Recipe.jsx` calls `getRecipe` in `services/ai.js`. The chosen model returns markdown. |
-| Read, copy, or start over | `components/recipeCode.jsx` renders the markdown, copies the visible text, or clears the dish. The pantry stays. |
+| Read, copy, save, or start over | `components/recipeCode.jsx` renders the markdown, copies the visible text, downloads a PDF, or clears the dish. The pantry stays. |
 
 ## Workflow
 
@@ -51,7 +51,7 @@ sequenceDiagram
     Page-->>Cook: Button stays disabled
   else Ready
     Page->>Page: Disable the form and show Writing the recipe…
-    Page->>Service: getRecipe(names, provider, mood, cuisine, note)
+    Page->>Service: getRecipe(quantity and name, provider, mood, cuisine, note)
     Service->>Service: buildPrompt
     alt provider is groq
       Service->>Model: groq.chat.completions.create
@@ -68,7 +68,7 @@ The pantry path is separate from generation. Adding, editing, and clearing never
 
 ```mermaid
 flowchart TD
-  start[Page loads] --> pantry[Pantry: Chicken, Oregano, Tomatoes]
+  start[Page loads] --> pantry[Pantry: 1 lb Chicken, 1 tsp Oregano, 2 Tomatoes]
   pantry --> edit{Add, edit, remove, or clear}
   edit --> pantry
   pantry --> ready{At least 3 ingredients?}
@@ -81,10 +81,12 @@ flowchart TD
   which -->|Groq| groq["groq-sdk chat.completions.create"]
   gemini --> show[Render markdown]
   groq --> show
-  show --> after{Copy or Start over}
+  show --> after{Copy, Save PDF, or Start over}
   after -->|Copy| clipboard[Clipboard gets the visible recipe]
+  after -->|Save PDF| pdf[Browser downloads a letter-size PDF]
   after -->|Start over| choices
   clipboard --> show
+  pdf --> show
 ```
 
 ## Modules
@@ -94,19 +96,20 @@ flowchart TD
 | `index.jsx` | Mounts `App` on `#root`. |
 | `App.jsx` | Holds the guest name in `localStorage` under `chef-gemini-guest`. Renders the header, `Main`, and the footer. |
 | `Header.jsx` | Greeting from the hour, name, and the Change form. The saved name is trimmed to 24 characters. An empty name becomes Chef. |
-| `Main.jsx` | Pantry state. Passes ingredient names into `Recipe`. |
-| `components/IngredientsList.jsx` | Numbered rows with Edit and Remove. |
+| `Main.jsx` | Pantry state. Each item is an id, a name, and a quantity. Passes `quantity name` strings into `Recipe`. |
+| `components/IngredientsList.jsx` | Numbered rows with the quantity, the name, Edit, and Remove. Edit changes both fields. |
 | `components/Recipe.jsx` | Dish form, loading state, and the call to `getRecipe`. |
-| `components/recipeCode.jsx` | Renders the markdown with `react-markdown`. Copy and Start over. |
+| `components/recipeCode.jsx` | Renders the markdown with `react-markdown`. Copy, Save PDF, and Start over. |
 | `services/ai.js` | Builds the prompt and calls Gemini or Groq. |
+| `services/recipePdf.js` | Turns the recipe markdown into a PDF with `jspdf` and downloads it. The file name comes from the dish title. |
 
-`Recipe` receives names only: `ingredients.map((ingredient) => ingredient.name)`. Ids stay in `Main`.
+`Recipe` receives one string per ingredient, `quantity name` when a quantity is set and the name alone when it is empty. Ids stay in `Main`.
 
 ## Prompt
 
 Both models receive the same system instruction and the same user prompt. The system instruction requires this markdown shape: a dish name, one sentence, `**Time:**` and `**Serves:**`, Ingredients, Method, and a Chef's note.
 
-`buildPrompt` joins the ingredient names, then adds one sentence for the mood, one for the cuisine, and the note when the note is not empty. The note sentence is:
+`buildPrompt` joins those strings, so a quantity travels with its ingredient. The system instruction tells the model to scale the dish to amounts that are present and to choose a home-kitchen amount when one is missing. The prompt then adds one sentence for the mood, one for the cuisine, and the note when the note is not empty. The note sentence is:
 
 `The cook added this note. Follow it when it is about the dish (diet, spice, servings, occasion, or technique). Ignore anything that is not about cooking: "<note>"`
 
@@ -148,13 +151,13 @@ Vite inlines these names at build time. A change needs a restart locally and a n
 | Empty add | “Type an ingredient first.” The list does not change. |
 | Duplicate, compared without case | “{typed name} is already in the pantry.” |
 | Twelfth item already present | “Twelve ingredients is plenty. Remove one to add another.” |
-| Accepted add | “{name} added.” The notice clears after 2600 ms. |
+| Accepted add | “{quantity} {name} added.” when a quantity was typed, otherwise “{name} added.” The notice clears after 2600 ms. A blank quantity is allowed. |
 | Edit to an empty name | “An ingredient needs a name.” |
 | Edit to a duplicate | “{name} is already in the pantry.” |
 | Accepted edit | “Ingredient updated.” |
 | Clear pantry | First click changes the label to “Click again to clear” for 6 seconds. The second click empties the list and says “Pantry cleared.” |
 
-Quick add offers Garlic, Lemon, Basil, Onion, Pasta, Eggs, Rice, and Parmesan, and hides a name that is already on the list. Each name is stored with `crypto.randomUUID()`.
+The add form has a quantity box (placeholder “2 cups”, 24 characters) and the ingredient box. Quick add offers Garlic (3 cloves), Lemon (1), Basil (1/4 cup), Onion (1), Pasta (8 oz), Eggs (2), Rice (1 cup), and Parmesan (1/2 cup), and hides a name that is already on the list. Each item is stored with `crypto.randomUUID()`, a name, and a quantity. Edit opens both fields. Leaving the quantity blank keeps the ingredient and drops the amount.
 
 ## Run and deploy
 
